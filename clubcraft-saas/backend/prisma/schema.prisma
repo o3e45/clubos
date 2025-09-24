@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Owner
+  Admin
+  Treasurer
+  Member
+  Viewer
+}
+
+model Club {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  members     Member[]
+  transactions Transaction[]
+  properties  Property[]
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  fullName  String
+  role      Role     @default(Viewer)
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(18, 2)
+  type      String
+  occurredAt DateTime
+  metadata  Json?
+}
+
+model Property {
+  id          String   @id @default(cuid())
+  clubId      String
+  club        Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  address     String
+  status      String
+  valuation   Decimal? @db.Decimal(18, 2)
+  acquiredAt  DateTime?
+}

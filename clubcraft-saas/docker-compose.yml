@@ -1,0 +1,50 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: clubcraft
+      POSTGRES_PASSWORD: clubcraft
+      POSTGRES_DB: clubcraft
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    command: redis-server --save 20 1 --loglevel warning
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+
+  stripe:
+    image: stripe/stripe-cli:latest
+    entrypoint: ['stripe', 'listen', '--forward-to', 'http://host.docker.internal:4000/webhooks/stripe']
+    environment:
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-sk_test_123}
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    command: pnpm dev
+    environment:
+      DATABASE_URL: postgresql://clubcraft:clubcraft@postgres:5432/clubcraft
+      REDIS_URL: redis://redis:6379
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_123}
+      JWT_SECRET: changeme
+    ports:
+      - '4000:4000'
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+      - redis
+
+volumes:
+  pgdata:
+  redisdata:
