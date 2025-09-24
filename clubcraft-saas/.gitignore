@@ -1,0 +1,14 @@
+node_modules
+.pnpm-store
+.env
+.env.local
+.DS_Store
+.next
+out
+coverage
+pnpm-lock.yaml
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+**/.turbo
+**/.DS_Store
